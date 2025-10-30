@@ -9,7 +9,7 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Generate GitHub activity
@@ -18,7 +18,7 @@ jobs:
           GITHUB_USERNAME: "Kiwi-Peng"
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
 
-      - name: Commit and push changes
+      - name: Commit changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
