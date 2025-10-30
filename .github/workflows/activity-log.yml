@@ -15,7 +15,7 @@ jobs:
       - name: Generate GitHub activity
         uses: TheDanniCraft/activity-log@v1
         with:
-          GITHUB_USERNAME: "你的 GitHub 使用者名稱"
+          GITHUB_USERNAME: "Kiwi-Peng"
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
 
       - name: Commit and push changes
