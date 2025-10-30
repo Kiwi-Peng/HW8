@@ -1,27 +1,34 @@
 name: Update Activity Log
 
+# 觸發條件
 on:
-  workflow_dispatch:
+  workflow_dispatch:        # 手動觸發
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '0 * * * *'    # 每小時自動更新
 
 jobs:
   update:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: 取得最新專案
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Step 2: 生成活動紀錄
       - name: Generate activity log
         uses: jamesgeorge007/github-activity-readme@master
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}  # 使用 PAT
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}  # 使用你新建的 PAT
         with:
           MAX_LINES: 8
           COMMIT_MSG: "Update README with recent activity"
 
+      # Step 3: 設定 git 並 commit & push
       - name: Commit and push changes
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+          REPO: ${{ github.repository }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -30,4 +37,4 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "Update activity log"
-            git push "https://x-access-token:${{ secrets.TOKEN }}@github.com/${{ github.repository }}.git" HEAD:main
+            git push "https://x-access-token:${TOKEN}@github.com/${REPO}.git" HEAD:main
