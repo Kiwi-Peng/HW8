@@ -3,7 +3,7 @@ name: Update Activity Log
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 2 * * *'   # 每天 02:00 UTC 執行
+    - cron: '0 2 * * *'   #  每天 02:00 UTC 執行
 
 jobs:
   update:
