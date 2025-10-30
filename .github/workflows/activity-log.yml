@@ -16,13 +16,13 @@ jobs:
         uses: actions/checkout@v4
 
       # Step 2: 生成活動紀錄
-       -  name: Generate activity log
-          uses: Readme‑Workflows/recent‑activity@main
-          env:
-           GITHUB_TOKEN: ${{ secrets.TOKEN }}     # 或 secrets.GITHUB_TOKEN
-          with:
-           GH_USERNAME: Kiwi‑Peng
+      -  name: Generate activity log
+         uses: jamesgeorge007/github-activity-readme@master
+         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}     # 或 secrets.GITHUB_TOKEN
+         with:
            MAX_LINES: 8
+           COMMIT_MSG: "Update README with recent activity"
 
 
       # Step 3: 設定 git 並 commit & push
