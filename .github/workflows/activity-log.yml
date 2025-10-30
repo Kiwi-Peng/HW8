@@ -17,7 +17,7 @@ jobs:
 
       # Step 2: 生成活動紀錄
       - name: Generate activity log
-        uses: Readme-Workflows/recent-activity@v2
+        uses: Readme-Workflows/recent-activity@main
         with:
           GH_TOKEN: ${{ secrets.TOKEN }}
 
