@@ -1,26 +1,27 @@
 name: Update Activity Log
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:        # 允許手動執行
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '0 2 * * *'     # 每天凌晨 2 點 (UTC) 執行一次
 
 jobs:
   update:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Generate GitHub activity
-        uses: TheDanniCraft/activity-log@main
+        uses: Readme-Workflows/recent-activity@v2
         with:
-          GH_TOKEN: ${{ secrets.TOKEN }}
+          GH_TOKEN: ${{ secrets.TOKEN }}   # 這裡呼叫你剛剛的 Secret
 
-      - name: Commit changes
+      - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add README.md
-          git commit -m "Update activity log" || echo "No changes"
+          git commit -m "Update activity log" || echo "No changes to commit"
           git push
