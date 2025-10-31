@@ -14,16 +14,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: 生成活動紀錄
+      # Step 2: 生成活動紀錄（禁用內建 commit）
       - name: Generate activity log
         uses: jamesgeorge007/github-activity-readme@master
+        with:
+          GH_USERNAME: Kiwi-Peng
+          MAX_LINES: 8
+          TARGET_FILE: README.md
+          COMMIT_MSG: ""  # 不讓它自己 commit
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
-        with:
-          MAX_LINES: 8
-          COMMIT_MSG: "Update README with recent activity"
 
-      # Step 3: Commit and Push
+      # Step 3: Commit & Push
       - name: Commit and push changes
         env:
           TOKEN: ${{ secrets.TOKEN }}
