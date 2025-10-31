@@ -1,54 +1,47 @@
 name: Update Activity Log
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:        # 手動觸發
   schedule:
-    - cron: '0 2 * * *'  # 每天 02:00 UTC 執行
+    - cron: '0 */6 * * *'   # 每 6 小時自動執行一次
 
 jobs:
   update:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: 取得最新專案
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
-      - name: Generate recent GitHub activity
-        env:
-          USERNAME: Kiwi-Peng
+      # Step 2: 生成 commit 活動紀錄（自訂腳本）
+      - name: Generate commit activity log
         run: |
-          echo "### Recent GitHub Activity" > activity.md
-          echo "" >> activity.md
-          curl -s "https://api.github.com/users/${USERNAME}/events/public" \
-            | jq -r '.[] | select(.type=="PushEvent") | "- " + .repo.name + ": " + (.payload.commits[0].message // "No commit message")' \
-            | head -n 8 >> activity.md
+          echo "## 🕒 Recent Commits" > activity_log.md
+          git log -5 --pretty=format:"- %h %s (%cr)" >> activity_log.md
+          echo "" >> activity_log.md
+          echo "" >> activity_log.md
+          # 將內容插入 README.md 中的佔位符
+          if grep -q "<!--START_SECTION:activity-->" README.md; then
+            awk '/<!--START_SECTION:activity-->/ {print; system("cat activity_log.md"); next} /<!--END_SECTION:activity-->/ {print; next}1' README.md > temp.md && mv temp.md README.md
+          else
+            echo "<!--START_SECTION:activity-->" >> README.md
+            cat activity_log.md >> README.md
+            echo "<!--END_SECTION:activity-->" >> README.md
+          fi
 
-          # 合併到 README.md
-          awk '/### Recent GitHub Activity/{flag=1;next}/^$/{flag=0}flag{next}1' README.md > tmp && mv tmp README.md
-          echo "" >> README.md
-          cat activity.md >> README.md
-
+      # Step 3: Commit 並 Push
       - name: Commit and push changes
         env:
           TOKEN: ${{ secrets.TOKEN }}
+          REPO: ${{ github.repository }}
         run: |
-          git config user.name "Kiwi-Peng"
-          git config user.email "Kiwi-Peng@users.noreply.github.com"
-          git remote set-url origin https://Kiwi-Peng:${TOKEN}@github.com/Kiwi-Peng/HW8.git
-
-          git add README.md || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
           if git diff --cached --quiet; then
             echo "✅ No changes to commit"
-            exit 0
+          else
+            git commit -m "Update activity log with recent commits"
+            git push "https://x-access-token:${TOKEN}@github.com/${REPO}.git" HEAD:main
           fi
-
-          git commit -m "chore: update recent GitHub activity"
-          git pull --rebase origin main || echo "ℹ️ No remote changes to rebase"
-          git push origin HEAD:main
