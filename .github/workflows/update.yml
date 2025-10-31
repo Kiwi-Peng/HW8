@@ -1,27 +1,30 @@
 name: Update Activity Log
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:        # 手動觸發
   schedule:
-    - cron: '0 2 * * *'  # 每天 02:00 UTC 自動執行
+    - cron: '0 2 * * *'    # 每天 02:00 UTC 自動執行
 
 jobs:
   update:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: 取得專案
+      # Step 1: Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: 生成活動紀錄（禁用內建 commit）
+      # Step 2: Generate activity log (禁用內建 commit)
       - name: Generate activity log
         uses: jamesgeorge007/github-activity-readme@master
         with:
           GH_USERNAME: Kiwi-Peng
           MAX_LINES: 8
           TARGET_FILE: README.md
-          COMMIT_MSG: ""  # 不讓它自己 commit
+          COMMIT_NAME: ""        # 禁止 action 自行 commit
+          COMMIT_EMAIL: ""       # 禁止 action 自行 commit
+          COMMIT_MSG: ""         # 禁止 action 自行 commit
+          EMPTY_COMMIT_MSG: ""   # 禁止 action 自行 commit
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
 
@@ -39,4 +42,3 @@ jobs:
           else
             git commit -m "Update activity log with recent commits"
             git push "https://x-access-token:${TOKEN}@github.com/${REPO}.git" HEAD:main
-          fi
