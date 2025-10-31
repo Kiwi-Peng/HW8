@@ -10,30 +10,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: 取得 repo
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Step 2: 生成活動紀錄（不自動 commit）
-      - name: Generate activity log
-        uses: jamesgeorge007/github-activity-readme@master
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          GH_USERNAME: Kiwi-Peng
-          MAX_LINES: 8
-          SKIP_COMMIT: true  # 👈 關鍵，讓它不要自動推！
-          TARGET_FILE: README.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          python-version: '3.x'
 
-      # Step 3: 手動 commit & push
+      - name: Generate recent GitHub activity
+        env:
+          USERNAME: Kiwi-Peng
+        run: |
+          echo "### Recent GitHub Activity" > activity.md
+          echo "" >> activity.md
+          curl -s "https://api.github.com/users/${USERNAME}/events/public" \
+            | jq -r '.[] | select(.type=="PushEvent") | "- " + .repo.name + ": " + (.payload.commits[0].message // "No commit message")' \
+            | head -n 8 >> activity.md
+
+          # 合併到 README.md
+          awk '/### Recent GitHub Activity/{flag=1;next}/^$/{flag=0}flag{next}1' README.md > tmp && mv tmp README.md
+          echo "" >> README.md
+          cat activity.md >> README.md
+
       - name: Commit and push changes
         env:
           TOKEN: ${{ secrets.TOKEN }}
           REPO: ${{ github.repository }}
         run: |
-          set -e
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${TOKEN}@github.com/${REPO}.git"
