@@ -3,27 +3,28 @@ name: Update Activity Log
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 * * * *'  # 每小時（可改）
+    - cron: '0 2 * * *'  # 每天 02:00 UTC 執行
 
 jobs:
   update:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository (full history, no creds)
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: false
+          persist-credentials: false  # 不使用內建 Token，避免權限衝突
 
-      - name: Generate activity log
-        uses: jamesgeorge007/github-activity-readme@master
+      - name: Generate recent GitHub activity
+        run: |
+          npx github-activity --username Kiwi-Peng --max 5 > activity.log
+          echo "### Recent GitHub Activity" > README.md
+          cat activity.log >> README.md
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}   # 你的 PAT 存在 secrets.TOKEN
-        with:
-          MAX_LINES: 8
-          COMMIT_MSG: "Update README with recent activity"
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
 
-      - name: Commit and push changes (using PAT, handle remote changes)
+      - name: Commit and push changes
         env:
           TOKEN: ${{ secrets.TOKEN }}
           REPO: ${{ github.repository }}
@@ -31,26 +32,14 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${TOKEN}@github.com/${REPO}.git"
 
-          # Ensure we have main locally and up-to-date refs
-          git fetch origin main --prune
-
-          # If README modified by previous step, stage it
-          git add README.md
-
-          # If there is nothing to commit, exit gracefully
+          git add README.md || true
           if git diff --cached --quiet; then
-            echo "No changes to commit"
+            echo "✅ No changes to commit"
             exit 0
           fi
 
-          git commit -m "chore: update activity section via workflow"
-
-          # Replace origin URL to use PAT for authentication
-          git remote set-url origin "https://x-access-token:${TOKEN}@github.com/${REPO}.git"
-
-          # Try to rebase remote changes to avoid push rejection (safe attempt)
-          git pull --rebase origin main || echo "Rebase failed or no remote changes, continuing"
-
-          # Push the commit to origin main
+          git commit -m "chore: update recent GitHub activity"
+          git pull --rebase origin main || echo "ℹ️ No remote changes to rebase"
           git push origin HEAD:main
