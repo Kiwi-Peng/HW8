@@ -1,36 +1,29 @@
 name: Update Activity Log
 
 on:
-  workflow_dispatch:        # 手動觸發
+  workflow_dispatch:
   schedule:
-    - cron: '0 */6 * * *'   # 每 6 小時自動執行一次
+    - cron: '0 2 * * *'  # 每天 02:00 UTC 自動執行
 
 jobs:
   update:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: 取得最新專案
+      # Step 1: 取得專案
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: 生成 commit 活動紀錄（自訂腳本）
-      - name: Generate commit activity log
-        run: |
-          echo "## 🕒 Recent Commits" > activity_log.md
-          git log -5 --pretty=format:"- %h %s (%cr)" >> activity_log.md
-          echo "" >> activity_log.md
-          echo "" >> activity_log.md
-          # 將內容插入 README.md 中的佔位符
-          if grep -q "<!--START_SECTION:activity-->" README.md; then
-            awk '/<!--START_SECTION:activity-->/ {print; system("cat activity_log.md"); next} /<!--END_SECTION:activity-->/ {print; next}1' README.md > temp.md && mv temp.md README.md
-          else
-            echo "<!--START_SECTION:activity-->" >> README.md
-            cat activity_log.md >> README.md
-            echo "<!--END_SECTION:activity-->" >> README.md
-          fi
+      # Step 2: 生成活動紀錄
+      - name: Generate activity log
+        uses: jamesgeorge007/github-activity-readme@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        with:
+          MAX_LINES: 8
+          COMMIT_MSG: "Update README with recent activity"
 
-      # Step 3: Commit 並 Push
+      # Step 3: Commit and Push
       - name: Commit and push changes
         env:
           TOKEN: ${{ secrets.TOKEN }}
