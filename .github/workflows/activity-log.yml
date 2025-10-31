@@ -38,11 +38,10 @@ jobs:
       - name: Commit and push changes
         env:
           TOKEN: ${{ secrets.TOKEN }}
-          REPO: ${{ github.repository }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin "https://x-access-token:${TOKEN}@github.com/${REPO}.git"
+          git config user.name "Kiwi-Peng"
+          git config user.email "Kiwi-Peng@users.noreply.github.com"
+          git remote set-url origin https://Kiwi-Peng:${TOKEN}@github.com/Kiwi-Peng/HW8.git
 
           git add README.md || true
           if git diff --cached --quiet; then
