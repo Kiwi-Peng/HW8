@@ -10,26 +10,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: false  # 不使用內建 Token，避免權限衝突
 
-      - name: Generate recent GitHub activity
-        run: |
-          npx github-activity --username Kiwi-Peng --max 5 > activity.log
-          echo "### Recent GitHub Activity" > README.md
-          cat activity.log >> README.md
+      # Step 2: 使用 github-activity-readme 生成活動紀錄（但不自動推）
+      - name: Generate activity log
+        uses: jamesgeorge007/github-activity-readme@master
+        with:
+          GH_USERNAME: Kiwi-Peng
+          MAX_LINES: 8
+          COMMIT_MSG: "update: README with recent activity"
+          COMMIT_NAME: github-actions[bot]
+          COMMIT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+          TARGET_FILE: README.md
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
 
+      # Step 3: 手動 commit & push
       - name: Commit and push changes
         env:
           TOKEN: ${{ secrets.TOKEN }}
           REPO: ${{ github.repository }}
         run: |
-          set -euo pipefail
+          set -e
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${TOKEN}@github.com/${REPO}.git"
