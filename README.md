@@ -1,4 +1,6 @@
-## 🧭 Recent GitHub Activity
+## 👋 Welcome
+
+This is my DevOps HW8 project.
+
 <!--START_SECTION:activity-->
-- Test activity log
 <!--END_SECTION:activity-->
