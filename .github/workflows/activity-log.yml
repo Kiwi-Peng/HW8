@@ -1,42 +1,56 @@
 name: Update Activity Log
 
-# 觸發條件
 on:
-  workflow_dispatch:        # 手動觸發
+  workflow_dispatch:
   schedule:
-    - cron: '0 * * * *'    # 每小時自動更新
+    - cron: '0 * * * *'  # 每小時（可改）
 
 jobs:
   update:
     runs-on: ubuntu-latest
-
     steps:
-      # Step 1: 取得最新專案
-      - name: Checkout repository
+      - name: Checkout repository (full history, no creds)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
 
-      # Step 2: 生成活動紀錄
       - name: Generate activity log
         uses: jamesgeorge007/github-activity-readme@master
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}  # 使用你新建的 PAT
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}   # 你的 PAT 存在 secrets.TOKEN
         with:
           MAX_LINES: 8
           COMMIT_MSG: "Update README with recent activity"
 
-      # Step 3: 設定 git 並 commit & push
-      - name: Commit and push changes
+      - name: Commit and push changes (using PAT, handle remote changes)
         env:
           TOKEN: ${{ secrets.TOKEN }}
           REPO: ${{ github.repository }}
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Ensure we have main locally and up-to-date refs
+          git fetch origin main --prune
+
+          # If README modified by previous step, stage it
           git add README.md
+
+          # If there is nothing to commit, exit gracefully
           if git diff --cached --quiet; then
             echo "No changes to commit"
-          else
-            git commit -m "Update activity log"
-            # 強制用 HTTPS + PAT 推送，避免被 branch protection 擋下
-            git push "https://x-access-token:${TOKEN}@github.com/${REPO}.git" HEAD:main
+            exit 0
           fi
+
+          git commit -m "chore: update activity section via workflow"
+
+          # Replace origin URL to use PAT for authentication
+          git remote set-url origin "https://x-access-token:${TOKEN}@github.com/${REPO}.git"
+
+          # Try to rebase remote changes to avoid push rejection (safe attempt)
+          git pull --rebase origin main || echo "Rebase failed or no remote changes, continuing"
+
+          # Push the commit to origin main
+          git push origin HEAD:main
