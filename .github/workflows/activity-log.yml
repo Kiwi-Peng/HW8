@@ -10,21 +10,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout repository
+      # Step 1: 取得 repo
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Step 2: 使用 github-activity-readme 生成活動紀錄（但不自動推）
+      # Step 2: 生成活動紀錄（不自動 commit）
       - name: Generate activity log
         uses: jamesgeorge007/github-activity-readme@master
         with:
           GH_USERNAME: Kiwi-Peng
           MAX_LINES: 8
-          COMMIT_MSG: "update: README with recent activity"
-          COMMIT_NAME: github-actions[bot]
-          COMMIT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+          SKIP_COMMIT: true  # 👈 關鍵，讓它不要自動推！
           TARGET_FILE: README.md
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
